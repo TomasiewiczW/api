@@ -3,7 +3,10 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 const sqlite3 = require('sqlite3').verbose();
-let db =  new sqlite3.Database('chinook.db');
+let db =  new sqlite3.Database('chinook2.db');
+
+let working = false;
+
 
 app.post('/AddWorker', (req, res) => {
     db.all(`INSERT INTO PracownicyZatrudnieni VALUES (${req.query.PersonId}, ${req.query.LastName}, ${req.query.FirstName}, ${req.query.NFCCode})`, (err, rows) => {
@@ -16,6 +19,13 @@ app.post('/AddWorker', (req, res) => {
 
 app.post('/WorkerScanned', (req, res) => {
     db.all(`INSERT INTO Wejscia VALUES (${req.query.PersonId}, ${req.query.LastName}, ${req.query.FirstName}, ${req.query.DateAndTime})`, (err, rows) => {
+        
+        if(working){
+            db.all(`UPDATE PracownicyZatrudnieni SET isCurrentlyWorking = 0 WHERE (FirstName = \"${req.query.FirstName}\")`)
+        }
+        else{
+            db.all(`UPDATE PracownicyZatrudnieni SET isCurrentlyWorking = 1 WHERE (FirstName = \"${req.query.FirstName}\")`)
+        }
         if(err){
             return console.log(err);
         }
@@ -23,8 +33,19 @@ app.post('/WorkerScanned', (req, res) => {
     })
 });
 
-app.get('/FindWorkerByNfcCode', (req, res) =>{
-    db.all(`SELECT * FROM PracownicyZatrudnieni WHERE NFCCode = ${req.query.NfcCode}`, (err, rows) => {
+app.get('/GetWorkerStatus', (req, res) => {
+    db.all(`SELECT isCurrentlyWorking FROM PracownicyZatrudnieni WHERE (FirstName = "${req.query.firstname}" AND LastName = "${req.query.lastname}")`, (err, rows) => {
+        if(err){
+            return console.log(err);
+        }
+        working = rows[0].isCurrentlyWorking;
+        console.log(working);
+        return res.send(rows);
+    })    
+});
+
+app.get('/FindWorkerByNfcCode', (req, res) => {
+    db.all(`SELECT * FROM PracownicyZatrudnieni WHERE NFCCode = "${req.query.NfcCode}"`, (err, rows) => {
         if(err) return console.log(err);
         return res.send(rows);
     })
