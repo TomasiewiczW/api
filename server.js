@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 const sqlite3 = require('sqlite3').verbose();
-let db =  new sqlite3.Database('chinook2.db');
+let db =  new sqlite3.Database('chinook.db');
 let wejscia = 0;
 let working = 0;
 
